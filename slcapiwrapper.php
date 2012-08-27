@@ -1,14 +1,24 @@
 <?
 
+/* 
+ * This is a wrapper for the Shared Learning Collaborative Data Store API.
+ * For more information, please see http://dev.slcedu.org.
+ * 
+ * Requirements:  PHP 5 and user sessions must be enabled in PHP.ini.
+ * 
+ */
+
+
 class slcAPIWrapper {
 
-  public $sandboxMode = 1;
-  private $clientID = '';
-  private $secret = '';
-  private $redirectURL = 'http://localhost/slc-api/';
-  public $endPntPath = '/api/rest/v1/';
+  public $clientID = '[your client id]';
+  public $secret = '[your app secret]';
+  public $redirectURL = 'http://localhost/slc-api/';
+  
+  public $endpointDomain = 'api.sandbox.slcedu.org';
+  public $endpointAccessPath = '/api/rest/v1/';
   public $oAuthEndPntPath = '/api/oauth/';
-  public $endPntDmn = '';
+
 
   public function __construct() {
     if (!$this->clientID)
@@ -17,7 +27,7 @@ class slcAPIWrapper {
       die('Secret not specified for SLC API.');
     elseif (!$this->redirectURL)
       die('Redirect URL not specified for SLC API.');
-    $this->endPntDmn = $this->sandboxMode ? 'api.sandbox.slcedu.org' : die('SLC API Sandbox Mode deactivated BUT non-sandbox OAuth endpoint is not in specification.');
+    
     if (!isset($_SESSION))
       session_start();
     if (isset($_SESSION['accessToken'])) {
@@ -87,7 +97,7 @@ class slcAPIWrapper {
     if (isset($_SESSION['lastAPICall']))
       unset($_SESSION['lastAPICall']);
     if (isset($_SESSION['accessToken'])) {
-      $apiRes = $this->getEndPntRes($this->endPntPath, $func, $postData);
+      $apiRes = $this->getEndPntRes($this->endpointAccessPath, $func, $postData);
       $jsonData = json_decode($apiRes);
       if (isset($jsonData->type)) {
         if ($jsonData->type == 'Unauthorized')
@@ -110,7 +120,7 @@ class slcAPIWrapper {
   }
   
   private function getEndPntRes($endPntPath, $qryStr, $postData = NULL) {
-    $host = "ssl://$this->endPntDmn";
+    $host = "ssl://$this->endpointDomain";
     // open a socket connection on port 443 for HTTPS - timeout: 30 sec
     $fp = fsockopen($host, 443, $errno, $errstr, 30);
     if ($fp) {
@@ -169,7 +179,7 @@ class slcAPIWrapper {
   private function authUser($lastFunc = NULL) {
     unset($_SESSION['accessToken']);
     $_SESSION['state'] = sha1(uniqid(rand(), TRUE)); // CSRF protection for OAuth
-    $path = "https://$this->endPntDmn$this->oAuthEndPntPath" . "authorize?response_type=code&client_id=$this->clientID&redirect_uri=$this->redirectURL&state=$_SESSION[state]";
+    $path = "https://$this->endpointDomain$this->oAuthEndPntPath" . "authorize?response_type=code&client_id=$this->clientID&redirect_uri=$this->redirectURL&state=$_SESSION[state]";
     $_SESSION['lastAPICall'] = $lastFunc;
     header("Location: $path");
     exit;
