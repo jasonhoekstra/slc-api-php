@@ -11,8 +11,8 @@
 
 class slcAPIWrapper {
 
-  public $clientID = '[your client id]';
-  public $secret = '[your app secret]';
+  public $clientID = '';
+  public $secret = '';
   public $redirectURL = 'http://localhost/slc-api/';
   
   public $endpointDomain = 'api.sandbox.slcedu.org';

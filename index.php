@@ -2,7 +2,7 @@
 require_once 'slcapiwrapper.php';
 $api = new slcAPIWrapper();
 
-$apiCalls = array('student', 'students', 'sections', 'attendances', 'courses', 'reportCards', 'teacher', 'parents', 'studentAssessments', 'studentAssessments - Write');
+$apiCalls = array('student', 'students', 'sections', 'attendances', 'courses', 'reportCards', 'teacher', 'parents', 'studentAssessments');
 
 function json_format($json) {
   $tab = "  ";
@@ -75,6 +75,13 @@ function json_format($json) {
 ?>  
 <html>
   <head>
+    <script src="codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <script src="codemirror/mode/javascript/javascript.js"></script>
+    <style type="text/css">
+      .CodeMirror-scroll { height: 600px; }
+      .CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}
+    </style>
   </head>
   <body style='font-family: verdana, serif;'>  
     <div style='padding: 1%; width: 60%; margin: 0; border: 2px solid #999;'>
@@ -86,11 +93,13 @@ function json_format($json) {
             ?><option <? if (isset($_POST['apiCall']) && $call == $_POST['apiCall']) { ?>selected='selected'<? } ?> value='<?= $call ?>'>
               <?= $call ?>
             </option> <? }
+            
+            $uuid = $_POST['uuid'];
             ?>
         </select>
-        <span style="font-size:75%">UUID:</span> <input type="text" size="60" name="uuid" />
+        <span style="font-size:75%">UUID:</span> <input type="text" size="60" name="uuid" value="<?= $uuid ?>" />
         <br /><br />
-        <button style='width: 100px;' type='submit'>Make Call</button>
+        <button style='width: 100px;' type='submit'>Make API Call</button>
       </form>
     </div>
 
@@ -98,59 +107,50 @@ function json_format($json) {
     <? if (isset($_POST['apiCall']) && $_POST['apiCall']) { ?>
       <div>
         <h3>API Response:</h3>
-        <textarea rows="40" cols="120" wrap="off" style="overflow: scroll; overflow-y: scroll; overflow-x: scroll; overflow:-moz-scrollbars-vertical;">
-            
+        <textarea id="codeEditor" rows="80" cols="120" wrap="off" style="height:500px; border: solid black" >
+                  
           <?
-          $uuid = $_POST['uuid'];
 
-          print_r($uuid);
-
-          if ($_POST['apiCall'] == 'student')
-            $result = $api->getStudent($uuid);
-          elseif ($_POST['apiCall'] == 'students')
-            $result = $api->getAllStudents();
-          elseif ($_POST['apiCall'] == 'sections')
-            $result = $api->getAllSections();
-          elseif ($_POST['apiCall'] == 'attendances')
-            $result = $api->getAttendances($uuid);
-          elseif ($_POST['apiCall'] == 'courses')
-            $result = $api->getAllCourses();
-          elseif ($_POST['apiCall'] == 'reportCards')
-            $result = $api->getAllReportCards();
-          elseif ($_POST['apiCall'] == 'teacher')
-            $result = $api->getTeacher($uuid);
-          elseif ($_POST['apiCall'] == 'parents')
-            $result = $api->getParents();
-          elseif ($_POST['apiCall'] == 'studentAssessments')
-            $result = $api->getAllStudentAssessments();
-          elseif ($_POST['apiCall'] == 'studentAssessments - Write') {
-            // generating sample StudentAssessmentAssociation JSON data object
-            $assmentData = $scoreResult = array();
-
-            // scoreResult data structure
-            $scoreResult['assessmentReportingMethod'] = 'Percentile';
-            $scoreResult['result'] = '90';
-
-            // student assessment data structure
-            $assmentData['administrationDate'] = '2012-08-12';
-            $assmentData['administrationEnvironment'] = 'Testing Center';
-            $assmentData['administrationLanguage'] = 'English';
-            $assmentData['gradeLevelWhenAssessed'] = 'Ninth grade';
-            $assmentData['scoreResults'][0] = $scoreResult;
-            $assmentData['serialNumber'] = '01010';
-            $assmentData['studentId'] = '2012ar-aed81718-e186-11e1-9ae2-024775652e7d';
-            $assmentData['assessmentId'] = '2012ft-b46f0f00-e186-11e1-9ae2-024775652e7d';
-
-            // generate JSON
-            $assmentData = json_encode($assmentData);
-            $result = $api->createStudentAssessment($assmentData);
+          switch ($_POST['apiCall']) {
+            case 'student':
+              $result = $api->getStudent($uuid);
+              break;
+            case 'students':
+              $result = $api->getAllStudents();
+              break;
+            case 'sections':
+              $result = $api->getAllSections();
+              break;
+            case 'attendances':
+              $result = $api->getAttendances($uuid);
+              break;
+            case 'courses':
+              $result = $api->getAllCourses();
+              break;
+            case 'reportCards':
+              $result = $api->getAllReportCards();
+              break;
+            case 'teacher':
+              $result = $api->getTeacher($uuid);
+              break;
+            case 'parents':
+              $result = $api->getParents();
+              break;
+            case 'studentAssessments':
+              $result = $api->getAllStudentAssessments();
+              break;
           }
-          //var_dump($result);
 
           echo json_format(json_encode($result));
           ?></textarea></div><?
         ;
       }
         ?>
+
+    <script>
+      var editor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
+        lineNumbers: true
+      });
+    </script>
   </body>
 </html>
